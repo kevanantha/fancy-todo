@@ -1,6 +1,7 @@
 if (process.env.NODE_ENV === 'development') {
   require('dotenv').config()
 }
+const errorHandler = require('./middlewares/errorHandler')
 const mongoose = require('mongoose')
 const express = require('express')
 const morgan = require('morgan')
@@ -26,5 +27,7 @@ mongoose
   })
 
 app.use('/', routes)
+
+app.use(errorHandler)
 
 app.listen(PORT, () => console.log(`Server runs on PORT: ${PORT}`))

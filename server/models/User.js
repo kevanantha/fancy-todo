@@ -20,11 +20,17 @@ const userSchema = new Schema({
   },
   password: {
     type: String,
-    require: [true, 'Password is required'],
+    required: [true, 'Password is required'],
+  },
+  name: {
+    type: String,
+  },
+  loginWith: {
+    type: String,
   },
 })
 
-userSchema.pre('save', next => {
+userSchema.pre('save', function(next) {
   this.password = hashPassword(this.password)
   next()
 })
