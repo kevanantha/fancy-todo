@@ -8,18 +8,29 @@ module.exports = {
   async register(req, res, next) {
     try {
       const { email, password } = req.body
-      const name = email.match(/^(\w+)\..*\.(\w+)@/)
-      const user = await User.create({
-        email,
-        name,
-        password,
-        loginWith: 'Form',
-      })
-      const token = generateJwt({ user: user._id })
-      res.status(201).json({
-        name,
-        token,
-      })
+
+      const user = await User.findOne({ email })
+
+      if (user && user.loginWith !== 'Form') {
+        const err = new Error(
+          `You already registered with ${user.loginWith}, login with ${user.loginWith} instead`,
+        )
+        err.name = 'AuthenticationError'
+        next(err)
+      } else {
+        console.log(email, password)
+        const newUser = await User.create({
+          email,
+          password,
+          loginWith: 'Form',
+        })
+        console.log(newUser)
+        const token = generateJwt({ user: newUser._id })
+        res.status(201).json({
+          name: newUser.name,
+          token,
+        })
+      }
     } catch (err) {
       next(err)
     }
@@ -120,7 +131,6 @@ module.exports = {
       const user = await User.findOne({
         email: payload.email,
       })
-      console.log(user)
 
       if (user) {
         if (user.loginWith !== 'Google') {
@@ -131,7 +141,7 @@ module.exports = {
           next(err)
         } else {
           const token = generateJwt({
-            name: user._id,
+            user: user._id,
           })
           res.status(200).json({
             token,
@@ -145,7 +155,6 @@ module.exports = {
           name: payload.name,
           loginWith: 'Google',
         })
-        console.log(newUser)
 
         const token = generateJwt({ user: newUser._id })
         res.status(200).json({
@@ -154,7 +163,7 @@ module.exports = {
         })
       }
     } catch (err) {
-      next()
+      next(err)
     }
   },
 }

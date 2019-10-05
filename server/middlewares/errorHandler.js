@@ -1,4 +1,5 @@
 module.exports = (err, req, res, next) => {
+  console.log(err)
   let status
   let message
 
@@ -17,7 +18,12 @@ module.exports = (err, req, res, next) => {
       break
     case 'JsonWebTokenError':
       status = 401
-      message: err.message
+      message = 'Not Authenticated! You must login'
+      // message = err.message
+      break
+    case 'Unauthorized':
+      status = 403
+      message = err.message
       break
     default:
       status = 500
