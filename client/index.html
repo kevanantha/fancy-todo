@@ -14,9 +14,9 @@
     <title>Fancy Todo</title>
   </head>
 
-  <div class="container-root" style="height: 100vh">
+  <div id="container-root" style="height: 100vh">
 
-    <nav class="navbar navbar-expand-lg navbar-dark bg-dark">
+    <nav class="navbar navbar-expand-lg navbar-dark bg-dark" id="navbar" style="margin-bottom: 10rem">
       <a class="navbar-brand" href="#">Fancy Todo</a>
       <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarSupportedContent" aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
         <span class="navbar-toggler-icon"></span>
@@ -66,6 +66,24 @@
     </nav>
 
     <div class="container">
+
+
+
+      <div class="text-center">
+        <div class="card" style="width: 75%; margin: auto" id="index" >
+          <!-- <div class="card-header"> -->
+          <!--   Featured -->
+          <!-- </div> -->
+          <!-- <ul class="list-group list-group-flush"> -->
+          <!--   <li class="list-group-item">Cras justo odio</li> -->
+          <!--   <li class="list-group-item">Dapibus ac facilisis in</li> -->
+          <!--   <li class="list-group-item">Vestibulum at eros</li> -->
+          <!-- </ul> -->
+        </div>
+        <button type="submit" class="btn btn-primary btn-md" style="margin-top: 2rem; width: 15%" onclick="addTodo()">Add Todo</button>
+      </div>
+
+
 
       <section id="registerSection" class="shadow p-3 mb-5 bg-white rounded" style="display: flex; flex-direction: column; align-items: center; margin-top: 10%">
         <form id="registerForm" style="padding: 3rem">

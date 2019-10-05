@@ -51,7 +51,7 @@ module.exports = {
         } else if (verifyPassword(password, user.password)) {
           const token = generateJwt({ user: user._id })
           res.status(200).json({
-            name,
+            name: user.name,
             token,
           })
         }

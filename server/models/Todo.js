@@ -8,7 +8,7 @@ const todoSchema = new Schema(
     },
     description: {
       type: String,
-      require: [true, 'Description is required'],
+      required: [true, 'Description is required'],
     },
     status: {
       type: Boolean,
