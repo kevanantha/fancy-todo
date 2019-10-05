@@ -2,12 +2,13 @@ const User = require('../models/User')
 const { generateJwt, verifyJwt } = require('../helpers/jwt')
 const { verifyPassword } = require('../helpers/bcrypt')
 const axios = require('axios')
+const { OAuth2Client } = require('google-auth-library')
 
 module.exports = {
   async register(req, res, next) {
-    const { email, password } = req.body
-    const name = email.match(/^(\w+)\..*\.(\w+)@/)
     try {
+      const { email, password } = req.body
+      const name = email.match(/^(\w+)\..*\.(\w+)@/)
       const user = await User.create({
         email,
         name,
@@ -24,17 +25,25 @@ module.exports = {
     }
   },
   async login(req, res, next) {
-    const { email, password } = req.body
     try {
+      const { email, password } = req.body
       const user = await User.findOne({
         email,
       })
-      if (user && verifyPassword(password, user.password)) {
-        const token = generateJwt({ user: user._id })
-        res.status(200).json({
-          name,
-          token,
-        })
+      if (user) {
+        if (user.loginWith !== 'Form') {
+          const err = new Error(
+            `You already registered with ${user.loginWith}, login with ${user.loginWith} instead`,
+          )
+          err.name = 'AuthenticationError'
+          next(err)
+        } else if (verifyPassword(password, user.password)) {
+          const token = generateJwt({ user: user._id })
+          res.status(200).json({
+            name,
+            token,
+          })
+        }
       } else {
         const err = new Error('Incorrect email/password')
         err.name = 'AuthenticationError'
@@ -67,7 +76,7 @@ module.exports = {
         email: user.email,
       })
       if (data) {
-        if (data.loginWith !== 'github') {
+        if (data.loginWith !== 'Github') {
           const err = new Error(
             `You already registered with ${data.loginWith}, login with ${data.loginWith} instead`,
           )
@@ -75,6 +84,8 @@ module.exports = {
           next(err)
         } else {
           const token = generateJwt({ user: data._id })
+          // res.redirect(`http://localhost:8080?token=${token}`)
+          // console.log(verifyJwt(token))
           res.status(200).json({
             token,
             name: data.name,
@@ -85,7 +96,7 @@ module.exports = {
           email: user.email,
           name: user.name,
           password: process.env.DEFAULT_PASSWORD,
-          loginWith: 'github',
+          loginWith: 'Github',
         })
 
         const token = generateJwt({ user: newUser._id })
@@ -96,6 +107,54 @@ module.exports = {
       }
     } catch (err) {
       next(err)
+    }
+  },
+  async gsignin(req, res, next) {
+    try {
+      const client = new OAuth2Client(process.env.GOOGLE_CLIENT_ID)
+      const { payload } = await client.verifyIdToken({
+        idToken: req.body.token,
+        audience: process.env.GOOGLE_CLIENT_ID,
+      })
+
+      const user = await User.findOne({
+        email: payload.email,
+      })
+      console.log(user)
+
+      if (user) {
+        if (user.loginWith !== 'Google') {
+          const err = new Error(
+            `You already registered with ${user.loginWith}, login with ${user.loginWith} instead`,
+          )
+          err.name = 'AuthenticationError'
+          next(err)
+        } else {
+          const token = generateJwt({
+            name: user._id,
+          })
+          res.status(200).json({
+            token,
+            name: user.name,
+          })
+        }
+      } else {
+        const newUser = await User.create({
+          email: payload.email,
+          password: process.env.DEFAULT_PASSWORD,
+          name: payload.name,
+          loginWith: 'Google',
+        })
+        console.log(newUser)
+
+        const token = generateJwt({ user: newUser._id })
+        res.status(200).json({
+          token,
+          name: newUser.name,
+        })
+      }
+    } catch (err) {
+      next()
     }
   },
 }

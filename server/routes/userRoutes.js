@@ -3,6 +3,7 @@ const { UserController } = require('../controllers')
 
 router.post('/register', UserController.register)
 router.post('/login', UserController.login)
+router.post('/gsignin', UserController.gsignin)
 router.get('/github', UserController.github)
 
 module.exports = router
