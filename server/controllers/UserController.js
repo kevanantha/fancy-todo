@@ -54,6 +54,10 @@ module.exports = {
             name: user.name,
             token,
           })
+        } else {
+          const err = new Error('Incorrect email/password')
+          err.name = 'AuthenticationError'
+          next(err)
         }
       } else {
         const err = new Error('Incorrect email/password')

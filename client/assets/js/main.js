@@ -43,16 +43,23 @@ async function index() {
     console.log(todos)
     if (todos.length) {
       $('#index').append(`
-        <div class="card-header">
-          ${localStorage.getItem('name')}'s Todos
+        <div>
+          <h2>
+            ${localStorage.getItem('name')}'s Todos
+          </h2>
         </div>
       `)
-      todos.map(todo => {
-        return $('#index').append(`
-          <ul class="list-group list-group-flush">
-            <li class="list-group-item">
-              <a href="http://localhost:3000/todos/${todo._id}">
-                ${todo.name}
+      todos.forEach(todo => {
+        $('#index').append(`
+          <ul class="list-group list-group-flush text-left">
+            <li class="list-group-item" style="text-decoration: none; display: flex; align-items: center">
+              <input type="checkbox" class="mr-3 checkbox" ${
+                todo.status ? 'checked' : ''
+              } onclick="todoStatus('${todo._id}')">
+              <a href="" class="text-dark">
+                <h5 class="m-0">
+                  ${todo.name}
+                </h5>
               </a>
             </li>
           </ul>
@@ -64,6 +71,63 @@ async function index() {
       `)
     }
     swal.close()
+  } catch (err) {
+    swal.fire({
+      title: `${err.response.data}`,
+      showCloseButton: true
+    })
+  }
+}
+
+async function todoStatus(id) {
+  try {
+    swal.fire({
+      title: 'Updating...',
+      onOpen() {
+        swal.showLoading()
+      }
+    })
+
+    const { data: todo } = await axios({
+      method: 'get',
+      url: `http://localhost:3000/todos/show/${id}`,
+      headers: {
+        access_token: localStorage.getItem('token')
+      }
+    })
+    console.log(todo)
+
+    await axios({
+      method: 'put',
+      url: `http://localhost:3000/todos/edit/${id}`,
+      headers: {
+        access_token: localStorage.getItem('token')
+      },
+      data: {
+        status: !todo.status
+      }
+    })
+
+    let text
+    const { data: joke } = await axios({
+      method: 'get',
+      url: 'https://sv443.net/jokeapi/category/any?blacklistFlags=religious'
+    })
+
+    swal.close()
+
+    if (joke.type == 'twopart') {
+      text = [joke.setup, joke.delivery]
+    } else {
+      text = [joke.joke]
+    }
+
+    await swal.fire({
+      title: `Todo Updated Successfully\n\n here's a ${joke.category.toLowerCase()} joke fo ya`,
+      text: text.join('\n'),
+      showConfirmButton: true
+    })
+    index()
   } catch (err) {
     swal.fire({
       title: `${err.response.data}`,

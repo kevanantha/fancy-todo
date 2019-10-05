@@ -33,17 +33,20 @@ module.exports = {
   },
   async update(req, res, next) {
     try {
-      const { name, description, status, due_date } = req.body
-      await Todo.updateOne(
+      const allowed = ['name', 'description', 'status', 'due_date']
+      const update = {}
+      allowed.forEach(allow => {
+        for (let key in req.body) {
+          if (key == allow) {
+            update[key] = req.body[key]
+          }
+        }
+      })
+      await Todo.findOneAndUpdate(
         {
           _id: req.params.todoId,
         },
-        {
-          name,
-          description,
-          status,
-          due_date,
-        },
+        update,
       )
       res.status(200).json({
         message: 'Updated Successfully',
@@ -51,6 +54,13 @@ module.exports = {
     } catch (err) {
       next(err)
     }
+  },
+  async updatePatch(req, res, next) {
+    //   try {
+    //     const {  }
+    //   } catch(err) {
+    //     next(err)
+    //   }
   },
   async delete(req, res, next) {
     try {
