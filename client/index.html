@@ -19,7 +19,7 @@
   <div id="container-root" style="height: 100vh">
 
     <nav class="navbar navbar-expand-lg navbar-dark bg-dark" id="navbar" style="margin-bottom: 10rem">
-      <a class="navbar-brand mr-auto" href="#">Fancy Todo</a>
+      <div class="navbar-brand mr-auto" style="cursor: pointer" onclick="backToHome()">Fancy Todo</div>
       <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarSupportedContent" aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
         <span class="navbar-toggler-icon"></span>
       </button>
@@ -35,7 +35,7 @@
           <div class="dropdown-menu">
             <button class="dropdown-item" onclick="createProject()">Create Project</button>
             <div class="dropdown-divider"></div>
-            <a class="dropdown-item" href="#">Separated link</a>
+            <div class="dropdown-item" onclick="projectsBtn()">Projects</div>
           </div>
         </div>
         <button type="button" class="btn btn-outline-danger content loginView" style="margin-left: 1rem" onclick="signOut()">Logout</button>
@@ -44,12 +44,9 @@
 
     <div class="container">
 
-
-
       <div class="text-center" style="margin-bottom: 10rem;">
         <div class="card shadow-lg mb-5 bg-white rounded" style="width: 65%; margin: auto; padding: 5rem" id="index">
         </div>
-        <button type="submit" class="btn btn-primary btn-md loginView" style="width: 15%" onclick="addTodo()">Add Todo</button>
       </div>
 
 

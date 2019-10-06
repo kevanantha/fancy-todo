@@ -92,9 +92,17 @@ async function index() {
           </ul>
         `)
       })
+      $('#index').append(`
+        <div class="text-center mt-5">
+          <button type="submit" class="btn btn-primary btn-md loginView" style="width: 25%" onclick="addTodo()">Add Todo</button>
+        </div>
+      `)
     } else {
       $('#index').append(`
         <h4>You don't have todos</h4>
+        <div class="text-center mt-5">
+          <button type="submit" class="btn btn-primary btn-md loginView" style="width: 25%" onclick="addTodo()">Add Todo</button>
+        </div>
       `)
     }
     swal.close()
@@ -450,6 +458,8 @@ $('#registerForm').on('submit', async function(e) {
     localStorage.setItem('token', user.token)
     localStorage.setItem('name', user.name)
 
+    isAuth()
+    index()
     swal.close()
   } catch (err) {
     const { data } = err.response
@@ -551,13 +561,11 @@ async function createProject() {
         access_token: localStorage.getItem('token')
       }
     })
-    console.log(users)
+
     const options = {}
     users.forEach(user => {
-      // if (user._id == localStorage.)
       options[user._id] = user.email
     })
-    console.log(options)
 
     const { value: projectName } = await swal.fire({
       title: 'Create Project',
@@ -594,8 +602,6 @@ async function createProject() {
         datas = { name: projectName }
       }
 
-      console.log({ projectName, userId })
-      console.log(datas)
       const { data: project } = await axios({
         method: 'post',
         url: 'http://localhost:3000/projects/create',
@@ -615,8 +621,460 @@ async function createProject() {
   }
 }
 
+async function projectsBtn() {
+  try {
+    swal.fire({
+      title: 'Fetching Projects...',
+      onOpen() {
+        swal.showLoading()
+      }
+    })
+
+    const { data: projects } = await axios({
+      method: 'get',
+      url: 'http://localhost:3000/projects',
+      headers: {
+        access_token: localStorage.getItem('token')
+      }
+    })
+
+    const options = {}
+    projects.forEach(project => {
+      options[project._id] = project.name
+    })
+
+    const { value: selectedProject } = await swal.fire({
+      title: 'Projects List',
+      input: 'select',
+      inputOptions: options,
+      inputPlaceholder: 'Select a project',
+      showCloseButton: true,
+      padding: '5rem'
+    })
+    console.log({ selectedProject, projects })
+
+    if (selectedProject) {
+      const { data: project } = await axios({
+        method: 'get',
+        url: `http://localhost:3000/projects/show/${selectedProject}`,
+        headers: {
+          access_token: localStorage.getItem('token')
+        }
+      })
+      indexProject(project._id)
+    }
+  } catch (err) {
+    swal.fire({
+      title: `${err.response.data}`,
+      showCloseButton: true
+    })
+  }
+}
+
+async function indexProject(id) {
+  try {
+    $('#index').empty()
+
+    swal.fire({
+      title: 'Fetching Data...',
+      onOpen() {
+        swal.showLoading()
+      }
+    })
+
+    const { data: project } = await axios({
+      method: 'get',
+      url: `http://localhost:3000/projects/show/${id}`,
+      headers: {
+        access_token: localStorage.getItem('token')
+      }
+    })
+
+    if (project.todos.length) {
+      $('#index').append(`
+        <div>
+          <h2 class="mb-4 text-monospace">
+            <span class="fa fa-check text-success"></span> ${project.name}'s Todos
+          </h2>
+        </div>
+      `)
+      project.todos.forEach(todo => {
+        $('#index').append(`
+          <ul class="list-group list-group-flush text-left">
+            <li class="list-group-item p-3" style="display: flex; align-items: center">
+              <input type="checkbox" class="mr-3 checkbox" ${
+                todo.status ? 'checked' : ''
+              } onclick="projectTodoStatus('${project._id}', '${todo._id}')">
+              <div class="text-dark text-decoration-none mr-auto" style="cursor: pointer" onclick="projectShowTodo('${
+                project._id
+              }', '${todo._id}')">
+                <h5 class="m-0">
+                  ${todo.status ? `<s>${todo.name}</s>` : todo.name}
+                </h5>
+              </div>
+              <div class="text-muted small badge badge-info text-wrap m-0 mr-3" style="width: 5.7rem">
+                <p class="text-white m-0">
+                  Due Date ${todo.due_date ? moment(todo.due_date).format('MMM Do YY') : ''}
+                </p>
+              </div>
+              <i class="fa fa-edit fa-lg mr-2 text-primary" style="cursor: pointer" onclick="projectEditTodo('${
+                project._id
+              }', '${todo._id}')"></i>
+              <i class="fa fa-trash fa-lg text-danger" style="cursor: pointer" onclick="projectDeleteTodo('${
+                project._id
+              }', '${todo._id}')"></i>
+            </li>
+          </ul>
+        `)
+      })
+      $('#index').append(`
+        <div class="text-center mt-5">
+          <button type="submit" class="btn btn-primary btn-md loginView" style="width: 25%" onclick="projectAddTodo('${project._id}')">Add Todo</button>
+        </div>
+      `)
+    } else {
+      $('#index').append(`
+        <h4>You don't have todos</h4>
+        <div class="text-center mt-5">
+          <button type="submit" class="btn btn-primary btn-md loginView" style="width: 25%" onclick="projectAddTodo('${project._id}')">Add Todo</button>
+        </div>
+      `)
+    }
+
+    swal.close()
+  } catch (err) {
+    swal.fire({
+      title: `${err.response.data}`,
+      showCloseButton: true
+    })
+  }
+}
+
+async function projectShowTodo(projectId, todoId) {
+  console.log(projectId, todoId)
+  try {
+    swal.fire({
+      title: 'Fetching Data...',
+      onOpen() {
+        swal.showLoading()
+      }
+    })
+
+    const { data: todo } = await axios({
+      method: 'get',
+      url: `http://localhost:3000/projects/${projectId}/todo/show/${todoId}`,
+      headers: {
+        access_token: localStorage.getItem('token')
+      }
+    })
+
+    swal.close()
+
+    swal.fire({
+      title: 'Detail Todo',
+      html: `
+        <div class="text-left mt-5">
+          <h5 class="font-weight-bold">Title</h5>
+          <p>${todo.name}</p>
+          <h5 class="font-weight-bold">Description</h5>
+          <p>${todo.description.replace(/\n/g, '<br />')}</p>
+          <h5 class="font-weight-bold">Status</h5>
+          ${
+            todo.status
+              ? '<p class="text-success">Completed</p>'
+              : '<p class="text-danger">Uncompleted</p>'
+          }
+          <h5 class="font-weight-bold">Last Update</h5>
+          <p>${moment(todo.updatedAt).format('MMM Do YYYY, h:mm:ss a')}</p>
+          <h5 class="font-weight-bold">Created At</h5>
+          <p>${moment(todo.createdAt).format('MMM Do YYYY, h:mm:ss a')}</p>
+        </div>
+      `,
+      padding: '5rem',
+      showCloseButton: true,
+      confirmButtonText: 'Close'
+    })
+  } catch (err) {
+    swal.fire({
+      title: `${err.response.data}`,
+      showCloseButton: true
+    })
+  }
+}
+
+async function projectTodoStatus(projectId, todoId) {
+  try {
+    swal.fire({
+      title: 'Updating...',
+      onOpen() {
+        swal.showLoading()
+      }
+    })
+
+    console.log(projectId, todoId)
+    const { data: todo } = await axios({
+      method: 'get',
+      url: `http://localhost:3000/projects/${projectId}/todo/show/${todoId}`,
+      headers: {
+        access_token: localStorage.getItem('token')
+      }
+    })
+
+    await axios({
+      method: 'put',
+      url: `http://localhost:3000/projects/${projectId}/todo/edit/${todoId}`,
+      headers: {
+        access_token: localStorage.getItem('token')
+      },
+      data: {
+        status: !todo.status
+      }
+    })
+
+    let text
+    const { data: joke } = await axios({
+      method: 'get',
+      url: 'https://sv443.net/jokeapi/category/any?blacklistFlags=religious'
+    })
+
+    swal.close()
+
+    if (joke.type == 'twopart') {
+      text = [joke.setup, joke.delivery]
+    } else {
+      text = [joke.joke]
+    }
+
+    await swal.fire({
+      title: `Todo Updated Successfully\n\n here's a ${joke.category.toLowerCase()} joke fo ya`,
+      text: text.join('\n'),
+      padding: '5rem',
+      showConfirmButton: true
+    })
+    indexProject(projectId)
+  } catch (err) {
+    swal.fire({
+      title: `${err.response.data}`,
+      showCloseButton: true
+    })
+  }
+}
+
+async function projectDeleteTodo(projectId, todoId) {
+  try {
+    const result = await swal.fire({
+      title: 'Are you sure?',
+      text: "You won't be able to revert this!",
+      type: 'warning',
+      showCancelButton: true,
+      confirmButtonColor: '#3085d6',
+      cancelButtonColor: '#d33',
+      confirmButtonText: 'Yes, delete it!'
+    })
+
+    if (result.value) {
+      swal.fire({
+        title: 'Deleting...',
+        onOpen() {
+          swal.showLoading()
+        }
+      })
+
+      await axios({
+        method: 'delete',
+        url: `http://localhost:3000/projects/${projectId}/todo/delete/${todoId}`,
+        headers: {
+          access_token: localStorage.getItem('token')
+        }
+      })
+
+      let text
+      const { data: joke } = await axios({
+        method: 'get',
+        url: 'https://sv443.net/jokeapi/category/any?blacklistFlags=religious'
+      })
+
+      swal.close()
+
+      if (joke.type == 'twopart') {
+        text = [joke.setup, joke.delivery]
+      } else {
+        text = [joke.joke]
+      }
+
+      await swal.fire({
+        title: `Todo Deleted Successfully\n\n here's a ${joke.category.toLowerCase()} joke fo ya`,
+        text: text.join('\n'),
+        showConfirmButton: true
+      })
+      indexProject(projectId)
+    }
+  } catch (err) {
+    swal.fire({
+      title: `${err.response.data}`,
+      showCloseButton: true
+    })
+  }
+}
+
+async function projectEditTodo(projectId, todoId) {
+  try {
+    swal.fire({
+      title: 'Fetching Data...',
+      onOpen() {
+        swal.showLoading()
+      }
+    })
+    const { data: todo } = await axios({
+      method: 'get',
+      url: `http://localhost:3000/projects/${projectId}/todo/show/${todoId}`,
+      headers: {
+        access_token: localStorage.getItem('token')
+      }
+    })
+    swal.close()
+
+    await swal.fire({
+      title: 'Edit Todo',
+      html:
+        `<label for="name">Name</label>` +
+        `<input id="name" value="${todo.name}" placeholder="Name" class="swal2-input">` +
+        `<label for="name">Description</label>` +
+        `<textarea id="description" placeholder="Description" class="swal2-textarea">${todo.description}</textarea>` +
+        `<label for="name">Due Date</label>` +
+        `<input
+          id="due_date"
+          value="${moment(todo.due_date).format('YYYY-MM-DD')}"
+          type="date" class="swal2-input">`,
+      focusConfirm: false,
+      showCancelButton: true,
+      padding: '5rem',
+      confirmButtonText: 'Update',
+      showLoaderOnConfirm: true,
+      preConfirm: async () => {
+        const data = [
+          document.getElementById('name').value,
+          document.getElementById('description').value,
+          document.getElementById('due_date').value
+        ]
+
+        try {
+          const { data: todo } = await axios({
+            method: 'put',
+            url: `http://localhost:3000/projects/${projectId}/todo/edit/${todoId}`,
+            headers: {
+              access_token: localStorage.getItem('token')
+            },
+            data: {
+              name: data[0],
+              description: data[1],
+              due_date: data[2]
+            }
+          })
+
+          let text
+          const { data: joke } = await axios({
+            method: 'get',
+            url: 'https://sv443.net/jokeapi/category/any?blacklistFlags=religious'
+          })
+          if (joke.type == 'twopart') {
+            text = [joke.setup, joke.delivery]
+          } else {
+            text = [joke.joke]
+          }
+
+          await swal.fire({
+            title: `Todo Updated Successfully\n\n here's a ${joke.category.toLowerCase()} joke fo ya`,
+            text: text.join('\n'),
+            padding: '5rem',
+            showConfirmButton: true
+          })
+          indexProject(projectId)
+        } catch (err) {
+          console.log(err.response)
+          swal.showValidationMessage(err.response.data.join('\n').replace(/\n/g, '<br />'))
+        }
+      },
+      allowOutsideClick: () => !swal.isLoading()
+    })
+  } catch (err) {
+    swal.fire({
+      title: `${err.response.data}`,
+      showCloseButton: true
+    })
+  }
+}
+
+async function projectAddTodo(projectId) {
+  try {
+    const { value: formValues } = await Swal.fire({
+      title: 'Create Todo',
+      html:
+        `<label for="name">Name</label>` +
+        '<input id="name" placeholder="Name" class="swal2-input">' +
+        `<label for="name">Description</label>` +
+        '<textarea id="description" placeholder="Description" class="swal2-textarea"></textarea>' +
+        `<label for="name">Due Date</label>` +
+        '<input id="due_date" type="date" class="swal2-input">',
+      focusConfirm: false,
+      showCancelButton: true,
+      confirmButtonText: 'Create',
+      padding: '5rem',
+      showLoaderOnConfirm: true,
+      preConfirm: async () => {
+        const data = [
+          document.getElementById('name').value,
+          document.getElementById('description').value,
+          document.getElementById('due_date').value
+        ]
+
+        try {
+          const { data: todo } = await axios({
+            method: 'post',
+            url: `http://localhost:3000/projects/${projectId}/todo/create`,
+            headers: {
+              access_token: localStorage.getItem('token')
+            },
+            data: {
+              name: data[0],
+              description: data[1],
+              due_date: data[2]
+            }
+          })
+          let text
+          const { data: joke } = await axios({
+            method: 'get',
+            url: 'https://sv443.net/jokeapi/category/any?blacklistFlags=religious'
+          })
+          if (joke.type == 'twopart') {
+            text = [joke.setup, joke.delivery]
+          } else {
+            text = [joke.joke]
+          }
+
+          await swal.fire({
+            title: `Todo Created Successfully\n\n here's a ${joke.category.toLowerCase()} joke fo ya`,
+            text: text.join('\n'),
+            padding: '5rem',
+            showConfirmButton: true
+          })
+          indexProject(projectId)
+        } catch (err) {
+          swal.showValidationMessage(err.response.data.join('\n').replace(/\n/g, '<br />'))
+        }
+      },
+      allowOutsideClick: () => !swal.isLoading()
+    })
+  } catch (err) {
+    swal.fire({
+      title: `${err.response.data}`,
+      showCloseButton: true
+    })
+  }
+}
+
 function signOut() {
-  var auth2 = gapi.auth2.getAuthInstance()
+  const auth2 = gapi.auth2.getAuthInstance()
   auth2.signOut().then(function() {
     localStorage.removeItem('token')
     localStorage.removeItem('name')
@@ -642,4 +1100,9 @@ function registerBtn() {
 function loginBtn() {
   $('#registerSection').show()
   $('#loginSection').hide()
+}
+
+function backToHome() {
+  isAuth()
+  index()
 }

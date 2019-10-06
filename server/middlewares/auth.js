@@ -36,8 +36,9 @@ const authorizationProject = async (req, res, next) => {
     })
     console.log(project)
 
+    console.log(req.loggedUser.user)
     const isAllowed = project.members.find(member => {
-      if (member._id == req.loggedUser.user) return true
+      if (member == req.loggedUser.user) return true
       return false
     })
 

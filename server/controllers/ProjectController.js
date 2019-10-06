@@ -5,8 +5,11 @@ module.exports = {
   async index(req, res, next) {
     try {
       const projects = await Project.find({
-        owner: req.loggedUser.user,
-      }).populate(['members', 'owner'])
+        // owner: req.loggedUser.user,
+        members: {
+          $in: req.loggedUser.user,
+        },
+      }).populate(['members', 'owner', 'todos'])
       res.status(200).json(projects)
     } catch (err) {
       next(err)
