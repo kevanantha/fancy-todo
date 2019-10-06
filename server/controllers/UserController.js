@@ -5,6 +5,18 @@ const axios = require('axios')
 const { OAuth2Client } = require('google-auth-library')
 
 module.exports = {
+  async index(req, res, next) {
+    try {
+      const users = await User.find({
+        _id: {
+          $ne: req.loggedUser.user,
+        },
+      }).select('name email _id')
+      res.status(200).json(users)
+    } catch (err) {
+      next(err)
+    }
+  },
   async register(req, res, next) {
     try {
       const { email, password } = req.body

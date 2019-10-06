@@ -22,7 +22,7 @@ $(document).ready(function() {
 
 function isAuth() {
   if (localStorage.getItem('token')) {
-    $('#loginName').html(`Welcome, ${localStorage.getItem('name')}`)
+    $('#loginName').html(`${localStorage.getItem('name')}`)
     $('.loginView').show()
     $('#registerSection').hide()
     $('#loginSection').hide()
@@ -534,6 +534,79 @@ async function onSignIn(googleUser) {
     localStorage.setItem('name', data.name)
     isAuth()
     index()
+  } catch (err) {
+    swal.fire({
+      title: `${err.response.data}`,
+      showCloseButton: true
+    })
+  }
+}
+
+async function createProject() {
+  try {
+    const { data: users } = await axios({
+      method: 'get',
+      url: 'http://localhost:3000/users',
+      headers: {
+        access_token: localStorage.getItem('token')
+      }
+    })
+    console.log(users)
+    const options = {}
+    users.forEach(user => {
+      // if (user._id == localStorage.)
+      options[user._id] = user.email
+    })
+    console.log(options)
+
+    const { value: projectName } = await swal.fire({
+      title: 'Create Project',
+      input: 'text',
+      showCancelButton: true,
+      inputValidator: value => {
+        if (!value) {
+          return 'Project Name is required'
+        }
+      }
+    })
+
+    if (projectName) {
+      const { value: userId } = await swal.fire({
+        title: 'Add Members',
+        input: 'select',
+        inputOptions: options,
+        inputPlaceholder: 'Select a member',
+        showCancelButton: true,
+        cancelButtonText: 'Skip'
+      })
+
+      swal.fire({
+        title: 'Creating Project...',
+        onOpen() {
+          swal.showLoading()
+        }
+      })
+
+      let datas
+      if (userId) {
+        datas = { name: projectName, members: userId }
+      } else {
+        datas = { name: projectName }
+      }
+
+      console.log({ projectName, userId })
+      console.log(datas)
+      const { data: project } = await axios({
+        method: 'post',
+        url: 'http://localhost:3000/projects/create',
+        headers: {
+          access_token: localStorage.getItem('token')
+        },
+        data: datas
+      })
+
+      swal.close()
+    }
   } catch (err) {
     swal.fire({
       title: `${err.response.data}`,

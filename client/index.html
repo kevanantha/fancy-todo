@@ -28,7 +28,15 @@
         <ul class="navbar-nav mr-auto">
         </ul>
         <div class="btn-group ml-3 loginView">
-          <div class="text-white" id="loginName"></div>
+          <button type="button" class="btn btn-info" id="loginName">Action</button>
+          <button type="button" class="btn btn-info dropdown-toggle dropdown-toggle-split" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+            <span class="sr-only">Toggle Dropdown</span>
+          </button>
+          <div class="dropdown-menu">
+            <button class="dropdown-item" onclick="createProject()">Create Project</button>
+            <div class="dropdown-divider"></div>
+            <a class="dropdown-item" href="#">Separated link</a>
+          </div>
         </div>
         <button type="button" class="btn btn-outline-danger content loginView" style="margin-left: 1rem" onclick="signOut()">Logout</button>
       </div>

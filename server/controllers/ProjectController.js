@@ -14,11 +14,16 @@ module.exports = {
   },
   async create(req, res, next) {
     try {
-      const project = await Project.create({
-        name: req.body.name,
-        owner: req.loggedUser.user,
-        members: [...req.body.members, req.loggedUser.user],
-      })
+      const obj = {}
+      if (req.body.members) {
+        obj.name = req.body.name
+        obj.owner = req.loggedUser.user
+        obj.members = req.body.members
+      } else {
+        obj.name = req.body.name
+        obj.owner = req.loggedUser.user
+      }
+      const project = await Project.create(obj)
       res.status(201).json(project)
     } catch (err) {
       next(err)
@@ -28,7 +33,7 @@ module.exports = {
     try {
       const project = await Project.findOne({
         _id: req.params.projectId,
-      }).populate(['todo', 'members', 'owner'])
+      }).populate(['todos', 'members', 'owner'])
       res.status(200).json(project)
     } catch (err) {
       next(err)
@@ -39,7 +44,18 @@ module.exports = {
       const { name, description, due_date } = req.body
       const { user: userId } = req.loggedUser
       const todo = await Todo.create({ userId, name, description, due_date })
-      res.status(201).json(todo)
+
+      const project = await Project.findOneAndUpdate(
+        {
+          _id: req.params.projectId,
+        },
+        {
+          $push: {
+            todos: todo._id,
+          },
+        },
+      )
+      res.status(201).json(project)
     } catch (err) {
       next(err)
     }
