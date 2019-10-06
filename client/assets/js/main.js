@@ -1,4 +1,5 @@
 $(document).ready(function() {
+  console.log("hola, how's it doing? eh?")
   if (window.location.search) {
     const query = window.location.search.substring(1)
     const token = query.split('token=')[1].split('&')[0]
@@ -662,7 +663,6 @@ async function projectsBtn() {
       showCloseButton: true,
       padding: '5rem'
     })
-    console.log({ selectedProject, projects })
 
     if (selectedProject) {
       const { data: project } = await axios({
@@ -700,7 +700,6 @@ async function indexProject(id) {
         access_token: localStorage.getItem('token')
       }
     })
-    console.log(project)
 
     if (project.todos.length) {
       $('#index').append(`
@@ -797,7 +796,6 @@ async function indexProject(id) {
 }
 
 async function projectShowTodo(projectId, todoId) {
-  console.log(projectId, todoId)
   try {
     swal.fire({
       title: 'Fetching Data...',
@@ -857,7 +855,6 @@ async function projectTodoStatus(projectId, todoId) {
       }
     })
 
-    console.log(projectId, todoId)
     const { data: todo } = await axios({
       method: 'get',
       url: `http://localhost:3000/projects/${projectId}/todo/show/${todoId}`,
@@ -1037,7 +1034,6 @@ async function projectEditTodo(projectId, todoId) {
           })
           indexProject(projectId)
         } catch (err) {
-          console.log(err.response)
           swal.showValidationMessage(err.response.data.join('\n').replace(/\n/g, '<br />'))
         }
       },
@@ -1167,7 +1163,6 @@ async function inviteMember(projectId) {
         userId
       }
     })
-    console.log(d)
 
     await swal.fire({
       type: 'success',
