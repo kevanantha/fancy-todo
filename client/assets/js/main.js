@@ -7,9 +7,11 @@ $(document).ready(function() {
       .split('&')[0]
       .split('%20')
       .join(' ')
+    const email = query.split('email=')[1].split('&')[0]
     if (token) {
       localStorage.setItem('token', token)
       localStorage.setItem('name', name)
+      localStorage.setItem('email', email)
       window.location = 'http://localhost:8080'
     }
   }
@@ -457,6 +459,7 @@ $('#registerForm').on('submit', async function(e) {
 
     localStorage.setItem('token', user.token)
     localStorage.setItem('name', user.name)
+    localStorage.setItem('email', user.email)
 
     isAuth()
     index()
@@ -504,6 +507,7 @@ $('#loginForm').on('submit', async function(e) {
 
     localStorage.setItem('token', user.token)
     localStorage.setItem('name', user.name)
+    localStorage.setItem('email', user.email)
 
     isAuth()
     index()
@@ -541,6 +545,7 @@ async function onSignIn(googleUser) {
     })
 
     localStorage.setItem('token', data.token)
+    localStorage.setItem('email', data.email)
     localStorage.setItem('name', data.name)
     isAuth()
     index()
@@ -611,7 +616,13 @@ async function createProject() {
         data: datas
       })
 
-      swal.close()
+      await swal.fire({
+        type: 'success',
+        title: `Project Created Successfully`,
+        padding: '5rem',
+        showConfirmButton: true
+      })
+      projectsBtn()
     }
   } catch (err) {
     swal.fire({
@@ -689,6 +700,7 @@ async function indexProject(id) {
         access_token: localStorage.getItem('token')
       }
     })
+    console.log(project)
 
     if (project.todos.length) {
       $('#index').append(`
@@ -729,15 +741,49 @@ async function indexProject(id) {
       })
       $('#index').append(`
         <div class="text-center mt-5">
-          <button type="submit" class="btn btn-primary btn-md loginView" style="width: 25%" onclick="projectAddTodo('${project._id}')">Add Todo</button>
+          <button
+            type="submit"
+            class="btn btn-primary btn-md loginView"
+            style="width: 25%"
+            onclick="projectAddTodo('${project._id}')"
+          >
+            Add Todo
+          </button>
+        </div>
+        <div class="text-center mt-5">
+          ${
+            project.owner.email == localStorage.getItem('email')
+              ? `<button type="submit" class="btn btn-info btn-md loginView" onclick="inviteMember('${project._id}')">Invite Member</button>`
+              : ''
+          }
         </div>
       `)
     } else {
       $('#index').append(`
         <h4>You don't have todos</h4>
         <div class="text-center mt-5">
-          <button type="submit" class="btn btn-primary btn-md loginView" style="width: 25%" onclick="projectAddTodo('${project._id}')">Add Todo</button>
+          <button
+            type="submit"
+            class="btn btn-primary btn-md loginView"
+            style="width: 25%"
+            onclick="projectAddTodo('${project._id}')"
+          >
+            Add Todo
+          </button>
         </div>
+        ${
+          project.owner.email == localStorage.getItem('email')
+            ? `<div class="text-center mt-5">
+                  <button
+                    type="submit"
+                    class="btn btn-primary btn-md loginView"
+                    onclick="inviteMember('${project._id}')"
+                  >
+                    Invite Member
+                  </button>
+                </div>`
+            : ''
+        }
       `)
     }
 
@@ -1073,11 +1119,78 @@ async function projectAddTodo(projectId) {
   }
 }
 
+async function inviteMember(projectId) {
+  try {
+    swal.fire({
+      title: 'Fetching Data...',
+      onOpen() {
+        swal.showLoading()
+      }
+    })
+
+    const { data: users } = await axios({
+      method: 'get',
+      url: 'http://localhost:3000/users',
+      headers: {
+        access_token: localStorage.getItem('token')
+      }
+    })
+
+    const options = {}
+    users.forEach(user => {
+      options[user._id] = user.email
+    })
+
+    const { value: userId } = await swal.fire({
+      title: 'Add Members',
+      input: 'select',
+      inputOptions: options,
+      inputPlaceholder: 'Select a member',
+      showCancelButton: true
+    })
+
+    swal.fire({
+      title: 'Adding Member...',
+      onOpen() {
+        swal.showLoading()
+      }
+    })
+
+    const d = await axios({
+      method: 'put',
+      url: `http://localhost:3000/projects/addMember`,
+      headers: {
+        access_token: localStorage.getItem('token')
+      },
+      data: {
+        projectId,
+        userId
+      }
+    })
+    console.log(d)
+
+    await swal.fire({
+      type: 'success',
+      title: `Member Invited Successfully`,
+      padding: '5rem',
+      showConfirmButton: true
+    })
+
+    indexProject(projectId)
+  } catch (err) {
+    swal.fire({
+      title: `${err.response.data}`,
+      showCloseButton: true
+    })
+  }
+}
+
 function signOut() {
   const auth2 = gapi.auth2.getAuthInstance()
   auth2.signOut().then(function() {
     localStorage.removeItem('token')
     localStorage.removeItem('name')
+    localStorage.removeItem('email')
     isAuth()
   })
   swal.fire({
@@ -1088,6 +1201,7 @@ function signOut() {
   })
   localStorage.removeItem('token')
   localStorage.removeItem('name')
+  localStorage.removeItem('email')
   $('#index').empty()
   isAuth()
 }

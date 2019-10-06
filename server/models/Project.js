@@ -23,6 +23,11 @@ const projectSchema = new Schema({
   ],
 })
 
+projectSchema.pre('save', function(next) {
+  this.members.push(this.owner)
+  next()
+})
+
 const Project = model('Project', projectSchema)
 
 module.exports = Project

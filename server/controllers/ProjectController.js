@@ -5,7 +5,6 @@ module.exports = {
   async index(req, res, next) {
     try {
       const projects = await Project.find({
-        // owner: req.loggedUser.user,
         members: {
           $in: req.loggedUser.user,
         },
@@ -59,6 +58,23 @@ module.exports = {
         },
       )
       res.status(201).json(project)
+    } catch (err) {
+      next(err)
+    }
+  },
+  async addMember(req, res, next) {
+    try {
+      const project = await Project.findOneAndUpdate(
+        {
+          _id: req.body.projectId,
+        },
+        {
+          $push: {
+            members: req.body.userId,
+          },
+        },
+      )
+      res.status(200).json(project)
     } catch (err) {
       next(err)
     }

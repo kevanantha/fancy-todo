@@ -5,6 +5,7 @@ const { authentication, authorizationProject, authorizationTodo } = require('../
 router.use(authentication)
 router.get('/', ProjectController.index)
 router.post('/create', ProjectController.create)
+router.put('/addMember', ProjectController.addMember)
 router.post('/:projectId/todo/create', ProjectController.createTodo)
 
 router.get('/show/:projectId', authorizationProject, ProjectController.show)

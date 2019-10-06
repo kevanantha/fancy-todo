@@ -38,6 +38,7 @@ module.exports = {
         const token = generateJwt({ user: newUser._id })
         res.status(201).json({
           name: newUser.name,
+          email: newUser.email,
           token,
         })
       }
@@ -62,6 +63,7 @@ module.exports = {
           const token = generateJwt({ user: user._id })
           res.status(200).json({
             name: user.name,
+            email: user.email,
             token,
           })
         } else {
@@ -109,11 +111,7 @@ module.exports = {
           next(err)
         } else {
           const token = generateJwt({ user: data._id })
-          res.redirect(`http://localhost:8080?token=${token}&name=${data.name}`)
-          // res.status(200).json({
-          //   token,
-          //   name: data.name,
-          // })
+          res.redirect(`http://localhost:8080?token=${token}&name=${data.name}&email=${data.email}`)
         }
       } else {
         const newUser = await User.create({
@@ -126,6 +124,7 @@ module.exports = {
         const token = generateJwt({ user: newUser._id })
         res.status(200).json({
           token,
+          email: user.email,
           name: user.name,
         })
       }
@@ -158,6 +157,7 @@ module.exports = {
           })
           res.status(200).json({
             token,
+            email: user.email,
             name: user.name,
           })
         }
@@ -172,6 +172,7 @@ module.exports = {
         const token = generateJwt({ user: newUser._id })
         res.status(200).json({
           token,
+          email: newUser.email,
           name: newUser.name,
         })
       }

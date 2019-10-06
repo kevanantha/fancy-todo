@@ -17,3 +17,12 @@ yarn install
 
 npm run dev
 ```
+
+// kendala
+// github sign in
+// error handler custom
+// cant akses req.params di middleware
+// onchange update status todo
+
+// minus dari app
+// invite double userid, blm di handle
