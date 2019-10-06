@@ -1,4 +1,19 @@
 $(document).ready(function() {
+  if (window.location.search) {
+    const query = window.location.search.substring(1)
+    const token = query.split('token=')[1].split('&')[0]
+    const name = query
+      .split('name=')[1]
+      .split('&')[0]
+      .split('%20')
+      .join(' ')
+    if (token) {
+      localStorage.setItem('token', token)
+      localStorage.setItem('name', name)
+      window.location = 'http://localhost:8080'
+    }
+  }
+
   isAuth()
   if (localStorage.getItem('token')) {
     index()
@@ -40,7 +55,6 @@ async function index() {
         access_token: localStorage.getItem('token')
       }
     })
-    console.log(todos)
     if (todos.length) {
       $('#index').append(`
         <div>
@@ -85,7 +99,6 @@ async function index() {
     }
     swal.close()
   } catch (err) {
-    console.log(err)
     swal.fire({
       title: `${err.response.data}`,
       showCloseButton: true
@@ -119,8 +132,16 @@ async function showTodo(id) {
         <p>${todo.name}</p>
         <h5 class="font-weight-bold">Description</h5>
         <p>${todo.description.replace(/\n/g, '<br />')}</p>
+        <h5 class="font-weight-bold">Status</h5>
+        ${
+          todo.status
+            ? '<p class="text-success">Completed</p>'
+            : '<p class="text-danger">Uncompleted</p>'
+        }
         <h5 class="font-weight-bold">Last Update</h5>
         <p>${moment(todo.updatedAt).format('MMM Do YYYY, h:mm:ss a')}</p>
+        <h5 class="font-weight-bold">Created At</h5>
+        <p>${moment(todo.createdAt).format('MMM Do YYYY, h:mm:ss a')}</p>
       </div>
     `,
     padding: '3rem',
@@ -202,7 +223,6 @@ async function todoStatus(id) {
         access_token: localStorage.getItem('token')
       }
     })
-    console.log(todo)
 
     await axios({
       method: 'put',
@@ -306,7 +326,6 @@ async function editTodo(id) {
         } else {
           text = [joke.joke]
         }
-        console.log(joke)
 
         await swal.fire({
           title: `Todo Updated Successfully\n\n here's a ${joke.category.toLowerCase()} joke fo ya`,
@@ -315,7 +334,6 @@ async function editTodo(id) {
         })
         index()
       } catch (err) {
-        console.log(err.response)
         swal.showValidationMessage(err.response.data.join(' and '))
       }
     },
@@ -367,7 +385,6 @@ async function addTodo() {
         } else {
           text = [joke.joke]
         }
-        console.log(joke)
 
         await swal.fire({
           title: `Todo Created Successfully\n\n here's a ${joke.category.toLowerCase()} joke fo ya`,

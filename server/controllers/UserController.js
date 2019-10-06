@@ -99,12 +99,11 @@ module.exports = {
           next(err)
         } else {
           const token = generateJwt({ user: data._id })
-          // res.redirect(`http://localhost:8080?token=${token}`)
-          // console.log(verifyJwt(token))
-          res.status(200).json({
-            token,
-            name: data.name,
-          })
+          res.redirect(`http://localhost:8080?token=${token}&name=${data.name}`)
+          // res.status(200).json({
+          //   token,
+          //   name: data.name,
+          // })
         }
       } else {
         const newUser = await User.create({
