@@ -8,7 +8,6 @@ router.post('/create', TodoController.create)
 
 router.use(authorization)
 router.put('/edit/:todoId', TodoController.update)
-router.patch('/editPatch/:todoId', TodoController.updatePatch)
 router.delete('/delete/:todoId', TodoController.delete)
 router.get('/show/:todoId', TodoController.show)
 

@@ -7,7 +7,7 @@ $(document).ready(function() {
 
 function isAuth() {
   if (localStorage.getItem('token')) {
-    $('#loginName').html(`${localStorage.getItem('name')}`)
+    $('#loginName').html(`Welcome, ${localStorage.getItem('name')}`)
     $('.loginView').show()
     $('#registerSection').hide()
     $('#loginSection').hide()
@@ -44,7 +44,7 @@ async function index() {
     if (todos.length) {
       $('#index').append(`
         <div>
-          <h2 class="mb-4">
+          <h2 class="mb-4 text-monospace">
             <span class="fa fa-check text-success"></span> ${localStorage.getItem('name')}'s Todos
           </h2>
         </div>
@@ -56,14 +56,18 @@ async function index() {
               <input type="checkbox" class="mr-3 checkbox" ${
                 todo.status ? 'checked' : ''
               } onclick="todoStatus('${todo._id}')">
-              <a href="" class="text-dark text-decoration-none mr-auto">
+              <div class="text-dark text-decoration-none mr-auto" style="cursor: pointer" onclick="showTodo('${
+                todo._id
+              }')">
                 <h5 class="m-0">
                   ${todo.status ? `<s>${todo.name}</s>` : todo.name}
                 </h5>
-              </a>
-              <p class="text-muted small m-0 mr-3">${
-                todo.due_date ? new Date(todo.due_date).toDateString() : ''
-              }</p>
+              </div>
+              <div class="text-muted small badge badge-info text-wrap m-0 mr-3" style="width: 5.7rem">
+                <p class="text-white m-0">
+                  Due Date ${todo.due_date ? moment(todo.due_date).format('MMM Do YY') : ''}
+                </p>
+              </div>
               <i class="fa fa-edit fa-lg mr-2 text-primary" style="cursor: pointer" onclick="editTodo('${
                 todo._id
               }')"></i>
@@ -81,6 +85,7 @@ async function index() {
     }
     swal.close()
   } catch (err) {
+    console.log(err)
     swal.fire({
       title: `${err.response.data}`,
       showCloseButton: true
@@ -88,43 +93,91 @@ async function index() {
   }
 }
 
+async function showTodo(id) {
+  swal.fire({
+    title: 'Fetching Data...',
+    onOpen() {
+      swal.showLoading()
+    }
+  })
+
+  const { data: todo } = await axios({
+    method: 'get',
+    url: `http://localhost:3000/todos/show/${id}`,
+    headers: {
+      access_token: localStorage.getItem('token')
+    }
+  })
+
+  swal.close()
+
+  swal.fire({
+    title: 'Detail Todo',
+    html: `
+      <div class="text-left">
+        <h5 class="font-weight-bold">Title</h5>
+        <p>${todo.name}</p>
+        <h5 class="font-weight-bold">Description</h5>
+        <p>${todo.description.replace(/\n/g, '<br />')}</p>
+        <h5 class="font-weight-bold">Last Update</h5>
+        <p>${moment(todo.updatedAt).format('MMM Do YYYY, h:mm:ss a')}</p>
+      </div>
+    `,
+    padding: '3rem',
+    showCloseButton: true,
+    confirmButtonText: 'Close'
+  })
+}
+
 async function deleteTodo(id) {
   try {
-    swal.fire({
-      title: 'Deleting...',
-      onOpen() {
-        swal.showLoading()
+    const result = await swal.fire({
+      title: 'Are you sure?',
+      text: "You won't be able to revert this!",
+      type: 'warning',
+      showCancelButton: true,
+      confirmButtonColor: '#3085d6',
+      cancelButtonColor: '#d33',
+      confirmButtonText: 'Yes, delete it!'
+    })
+
+    if (result.value) {
+      swal.fire({
+        title: 'Deleting...',
+        onOpen() {
+          swal.showLoading()
+        }
+      })
+
+      await axios({
+        method: 'delete',
+        url: `http://localhost:3000/todos/delete/${id}`,
+        headers: {
+          access_token: localStorage.getItem('token')
+        }
+      })
+
+      let text
+      const { data: joke } = await axios({
+        method: 'get',
+        url: 'https://sv443.net/jokeapi/category/any?blacklistFlags=religious'
+      })
+
+      swal.close()
+
+      if (joke.type == 'twopart') {
+        text = [joke.setup, joke.delivery]
+      } else {
+        text = [joke.joke]
       }
-    })
 
-    const { data: todo } = await axios({
-      method: 'delete',
-      url: `http://localhost:3000/todos/delete/${id}`,
-      headers: {
-        access_token: localStorage.getItem('token')
-      }
-    })
-
-    let text
-    const { data: joke } = await axios({
-      method: 'get',
-      url: 'https://sv443.net/jokeapi/category/any?blacklistFlags=religious'
-    })
-
-    swal.close()
-
-    if (joke.type == 'twopart') {
-      text = [joke.setup, joke.delivery]
-    } else {
-      text = [joke.joke]
+      await swal.fire({
+        title: `Todo Deleted Successfully\n\n here's a ${joke.category.toLowerCase()} joke fo ya`,
+        text: text.join('\n'),
+        showConfirmButton: true
+      })
+      index()
     }
-
-    await swal.fire({
-      title: `Todo Deleted Successfully\n\n here's a ${joke.category.toLowerCase()} joke fo ya`,
-      text: text.join('\n'),
-      showConfirmButton: true
-    })
-    index()
   } catch (err) {
     swal.fire({
       title: `${err.response.data}`,
@@ -209,11 +262,15 @@ async function editTodo(id) {
   await swal.fire({
     title: 'Edit Todo',
     html:
-      `<input id="name" value="${todo.name}" class="swal2-input">` +
-      `<textarea id="description" class="swal2-textarea">${todo.description}</textarea>` +
-      `<input id="due_date" value="${new Date(todo.due_date).getFullYear()}-${new Date(
-        todo.due_date
-      ).getMonth()}-${new Date(todo.due_date).getDate()}" type="date" class="swal2-input">`,
+      `<label for="name">Name</label>` +
+      `<input id="name" value="${todo.name}" placeholder="Name" class="swal2-input">` +
+      `<label for="name">Description</label>` +
+      `<textarea id="description" placeholder="Description" class="swal2-textarea">${todo.description}</textarea>` +
+      `<label for="name">Due Date</label>` +
+      `<input
+        id="due_date"
+        value="${moment(todo.due_date).format('YYYY-MM-DD')}"
+        type="date" class="swal2-input">`,
     focusConfirm: false,
     showCancelButton: true,
     confirmButtonText: 'Update',
@@ -228,7 +285,7 @@ async function editTodo(id) {
       try {
         const { data: todo } = await axios({
           method: 'put',
-          url: `http:localhost:3000/todos/edit`,
+          url: `http://localhost:3000/todos/edit/${id}`,
           headers: {
             access_token: localStorage.getItem('token')
           },
@@ -252,12 +309,13 @@ async function editTodo(id) {
         console.log(joke)
 
         await swal.fire({
-          title: `Todo Created Successfully\n\n here's a ${joke.category.toLowerCase()} joke fo ya`,
+          title: `Todo Updated Successfully\n\n here's a ${joke.category.toLowerCase()} joke fo ya`,
           text: text.join('\n'),
           showConfirmButton: true
         })
         index()
       } catch (err) {
+        console.log(err.response)
         swal.showValidationMessage(err.response.data.join(' and '))
       }
     },
@@ -269,8 +327,11 @@ async function addTodo() {
   const { value: formValues } = await Swal.fire({
     title: 'Create Todo',
     html:
-      '<input id="name" class="swal2-input">' +
-      '<textarea id="description" class="swal2-textarea"></textarea>' +
+      `<label for="name">Name</label>` +
+      '<input id="name" placeholder="Name" class="swal2-input">' +
+      `<label for="name">Description</label>` +
+      '<textarea id="description" placeholder="Description" class="swal2-textarea"></textarea>' +
+      `<label for="name">Due Date</label>` +
       '<input id="due_date" type="date" class="swal2-input">',
     focusConfirm: false,
     showCancelButton: true,

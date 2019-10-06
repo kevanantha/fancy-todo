@@ -55,13 +55,6 @@ module.exports = {
       next(err)
     }
   },
-  async updatePatch(req, res, next) {
-    //   try {
-    //     const {  }
-    //   } catch(err) {
-    //     next(err)
-    //   }
-  },
   async delete(req, res, next) {
     try {
       await Todo.deleteOne({
