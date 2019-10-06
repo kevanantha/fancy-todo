@@ -18,13 +18,11 @@ module.exports = {
         err.name = 'AuthenticationError'
         next(err)
       } else {
-        console.log(email, password)
         const newUser = await User.create({
           email,
           password,
           loginWith: 'Form',
         })
-        console.log(newUser)
         const token = generateJwt({ user: newUser._id })
         res.status(201).json({
           name: newUser.name,

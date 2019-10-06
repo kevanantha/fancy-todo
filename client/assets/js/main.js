@@ -107,47 +107,54 @@ async function index() {
 }
 
 async function showTodo(id) {
-  swal.fire({
-    title: 'Fetching Data...',
-    onOpen() {
-      swal.showLoading()
-    }
-  })
+  try {
+    swal.fire({
+      title: 'Fetching Data...',
+      onOpen() {
+        swal.showLoading()
+      }
+    })
 
-  const { data: todo } = await axios({
-    method: 'get',
-    url: `http://localhost:3000/todos/show/${id}`,
-    headers: {
-      access_token: localStorage.getItem('token')
-    }
-  })
+    const { data: todo } = await axios({
+      method: 'get',
+      url: `http://localhost:3000/todos/show/${id}`,
+      headers: {
+        access_token: localStorage.getItem('token')
+      }
+    })
 
-  swal.close()
+    swal.close()
 
-  swal.fire({
-    title: 'Detail Todo',
-    html: `
-      <div class="text-left">
-        <h5 class="font-weight-bold">Title</h5>
-        <p>${todo.name}</p>
-        <h5 class="font-weight-bold">Description</h5>
-        <p>${todo.description.replace(/\n/g, '<br />')}</p>
-        <h5 class="font-weight-bold">Status</h5>
-        ${
-          todo.status
-            ? '<p class="text-success">Completed</p>'
-            : '<p class="text-danger">Uncompleted</p>'
-        }
-        <h5 class="font-weight-bold">Last Update</h5>
-        <p>${moment(todo.updatedAt).format('MMM Do YYYY, h:mm:ss a')}</p>
-        <h5 class="font-weight-bold">Created At</h5>
-        <p>${moment(todo.createdAt).format('MMM Do YYYY, h:mm:ss a')}</p>
-      </div>
-    `,
-    padding: '3rem',
-    showCloseButton: true,
-    confirmButtonText: 'Close'
-  })
+    swal.fire({
+      title: 'Detail Todo',
+      html: `
+        <div class="text-left mt-5">
+          <h5 class="font-weight-bold">Title</h5>
+          <p>${todo.name}</p>
+          <h5 class="font-weight-bold">Description</h5>
+          <p>${todo.description.replace(/\n/g, '<br />')}</p>
+          <h5 class="font-weight-bold">Status</h5>
+          ${
+            todo.status
+              ? '<p class="text-success">Completed</p>'
+              : '<p class="text-danger">Uncompleted</p>'
+          }
+          <h5 class="font-weight-bold">Last Update</h5>
+          <p>${moment(todo.updatedAt).format('MMM Do YYYY, h:mm:ss a')}</p>
+          <h5 class="font-weight-bold">Created At</h5>
+          <p>${moment(todo.createdAt).format('MMM Do YYYY, h:mm:ss a')}</p>
+        </div>
+      `,
+      padding: '5rem',
+      showCloseButton: true,
+      confirmButtonText: 'Close'
+    })
+  } catch (err) {
+    swal.fire({
+      title: `${err.response.data}`,
+      showCloseButton: true
+    })
+  }
 }
 
 async function deleteTodo(id) {
@@ -252,6 +259,7 @@ async function todoStatus(id) {
     await swal.fire({
       title: `Todo Updated Successfully\n\n here's a ${joke.category.toLowerCase()} joke fo ya`,
       text: text.join('\n'),
+      padding: '5rem',
       showConfirmButton: true
     })
     index()
@@ -264,140 +272,158 @@ async function todoStatus(id) {
 }
 
 async function editTodo(id) {
-  swal.fire({
-    title: 'Fetching Data...',
-    onOpen() {
-      swal.showLoading()
-    }
-  })
-  const { data: todo } = await axios({
-    method: 'get',
-    url: `http://localhost:3000/todos/show/${id}`,
-    headers: {
-      access_token: localStorage.getItem('token')
-    }
-  })
-  swal.close()
-
-  await swal.fire({
-    title: 'Edit Todo',
-    html:
-      `<label for="name">Name</label>` +
-      `<input id="name" value="${todo.name}" placeholder="Name" class="swal2-input">` +
-      `<label for="name">Description</label>` +
-      `<textarea id="description" placeholder="Description" class="swal2-textarea">${todo.description}</textarea>` +
-      `<label for="name">Due Date</label>` +
-      `<input
-        id="due_date"
-        value="${moment(todo.due_date).format('YYYY-MM-DD')}"
-        type="date" class="swal2-input">`,
-    focusConfirm: false,
-    showCancelButton: true,
-    confirmButtonText: 'Update',
-    showLoaderOnConfirm: true,
-    preConfirm: async () => {
-      const data = [
-        document.getElementById('name').value,
-        document.getElementById('description').value,
-        document.getElementById('due_date').value
-      ]
-
-      try {
-        const { data: todo } = await axios({
-          method: 'put',
-          url: `http://localhost:3000/todos/edit/${id}`,
-          headers: {
-            access_token: localStorage.getItem('token')
-          },
-          data: {
-            name: data[0],
-            description: data[1],
-            due_date: data[2]
-          }
-        })
-
-        let text
-        const { data: joke } = await axios({
-          method: 'get',
-          url: 'https://sv443.net/jokeapi/category/any?blacklistFlags=religious'
-        })
-        if (joke.type == 'twopart') {
-          text = [joke.setup, joke.delivery]
-        } else {
-          text = [joke.joke]
-        }
-
-        await swal.fire({
-          title: `Todo Updated Successfully\n\n here's a ${joke.category.toLowerCase()} joke fo ya`,
-          text: text.join('\n'),
-          showConfirmButton: true
-        })
-        index()
-      } catch (err) {
-        swal.showValidationMessage(err.response.data.join(' and '))
+  try {
+    swal.fire({
+      title: 'Fetching Data...',
+      onOpen() {
+        swal.showLoading()
       }
-    },
-    allowOutsideClick: () => !swal.isLoading()
-  })
+    })
+    const { data: todo } = await axios({
+      method: 'get',
+      url: `http://localhost:3000/todos/show/${id}`,
+      headers: {
+        access_token: localStorage.getItem('token')
+      }
+    })
+    swal.close()
+
+    await swal.fire({
+      title: 'Edit Todo',
+      html:
+        `<label for="name">Name</label>` +
+        `<input id="name" value="${todo.name}" placeholder="Name" class="swal2-input">` +
+        `<label for="name">Description</label>` +
+        `<textarea id="description" placeholder="Description" class="swal2-textarea">${todo.description}</textarea>` +
+        `<label for="name">Due Date</label>` +
+        `<input
+          id="due_date"
+          value="${moment(todo.due_date).format('YYYY-MM-DD')}"
+          type="date" class="swal2-input">`,
+      focusConfirm: false,
+      showCancelButton: true,
+      padding: '5rem',
+      confirmButtonText: 'Update',
+      showLoaderOnConfirm: true,
+      preConfirm: async () => {
+        const data = [
+          document.getElementById('name').value,
+          document.getElementById('description').value,
+          document.getElementById('due_date').value
+        ]
+
+        try {
+          const { data: todo } = await axios({
+            method: 'put',
+            url: `http://localhost:3000/todos/edit/${id}`,
+            headers: {
+              access_token: localStorage.getItem('token')
+            },
+            data: {
+              name: data[0],
+              description: data[1],
+              due_date: data[2]
+            }
+          })
+
+          let text
+          const { data: joke } = await axios({
+            method: 'get',
+            url: 'https://sv443.net/jokeapi/category/any?blacklistFlags=religious'
+          })
+          if (joke.type == 'twopart') {
+            text = [joke.setup, joke.delivery]
+          } else {
+            text = [joke.joke]
+          }
+
+          await swal.fire({
+            title: `Todo Updated Successfully\n\n here's a ${joke.category.toLowerCase()} joke fo ya`,
+            text: text.join('\n'),
+            padding: '5rem',
+            showConfirmButton: true
+          })
+          index()
+        } catch (err) {
+          swal.showValidationMessage(err.response.data.join('\n').replace(/\n/g, '<br />'))
+        }
+      },
+      allowOutsideClick: () => !swal.isLoading()
+    })
+  } catch (err) {
+    swal.fire({
+      title: `${err.response.data}`,
+      showCloseButton: true
+    })
+  }
 }
 
 async function addTodo() {
-  const { value: formValues } = await Swal.fire({
-    title: 'Create Todo',
-    html:
-      `<label for="name">Name</label>` +
-      '<input id="name" placeholder="Name" class="swal2-input">' +
-      `<label for="name">Description</label>` +
-      '<textarea id="description" placeholder="Description" class="swal2-textarea"></textarea>' +
-      `<label for="name">Due Date</label>` +
-      '<input id="due_date" type="date" class="swal2-input">',
-    focusConfirm: false,
-    showCancelButton: true,
-    confirmButtonText: 'Create',
-    showLoaderOnConfirm: true,
-    preConfirm: async () => {
-      const data = [
-        document.getElementById('name').value,
-        document.getElementById('description').value,
-        document.getElementById('due_date').value
-      ]
+  try {
+    const { value: formValues } = await Swal.fire({
+      title: 'Create Todo',
+      html:
+        `<label for="name">Name</label>` +
+        '<input id="name" placeholder="Name" class="swal2-input">' +
+        `<label for="name">Description</label>` +
+        '<textarea id="description" placeholder="Description" class="swal2-textarea"></textarea>' +
+        `<label for="name">Due Date</label>` +
+        '<input id="due_date" type="date" class="swal2-input">',
+      focusConfirm: false,
+      showCancelButton: true,
+      confirmButtonText: 'Create',
+      padding: '5rem',
+      showLoaderOnConfirm: true,
+      preConfirm: async () => {
+        const data = [
+          document.getElementById('name').value,
+          document.getElementById('description').value,
+          document.getElementById('due_date').value
+        ]
 
-      try {
-        const { data: todo } = await axios({
-          method: 'post',
-          url: 'http://localhost:3000/todos/create',
-          headers: {
-            access_token: localStorage.getItem('token')
-          },
-          data: {
-            name: data[0],
-            description: data[1],
-            due_date: data[2]
+        try {
+          const { data: todo } = await axios({
+            method: 'post',
+            url: 'http://localhost:3000/todos/create',
+            headers: {
+              access_token: localStorage.getItem('token')
+            },
+            data: {
+              name: data[0],
+              description: data[1],
+              due_date: data[2]
+            }
+          })
+          let text
+          const { data: joke } = await axios({
+            method: 'get',
+            url: 'https://sv443.net/jokeapi/category/any?blacklistFlags=religious'
+          })
+          if (joke.type == 'twopart') {
+            text = [joke.setup, joke.delivery]
+          } else {
+            text = [joke.joke]
           }
-        })
-        let text
-        const { data: joke } = await axios({
-          method: 'get',
-          url: 'https://sv443.net/jokeapi/category/any?blacklistFlags=religious'
-        })
-        if (joke.type == 'twopart') {
-          text = [joke.setup, joke.delivery]
-        } else {
-          text = [joke.joke]
-        }
 
-        await swal.fire({
-          title: `Todo Created Successfully\n\n here's a ${joke.category.toLowerCase()} joke fo ya`,
-          text: text.join('\n'),
-          showConfirmButton: true
-        })
-        index()
-      } catch (err) {
-        swal.showValidationMessage(err.response.data.join(' and '))
-      }
-    },
-    allowOutsideClick: () => !swal.isLoading()
-  })
+          await swal.fire({
+            title: `Todo Created Successfully\n\n here's a ${joke.category.toLowerCase()} joke fo ya`,
+            text: text.join('\n'),
+            padding: '5rem',
+            showConfirmButton: true
+          })
+          index()
+        } catch (err) {
+          swal.showValidationMessage(err.response.data.join('\n').replace(/\n/g, '<br />'))
+        }
+      },
+      allowOutsideClick: () => !swal.isLoading()
+    })
+  } catch (err) {
+    swal.fire({
+      title: `${err.response.data}`,
+      showCloseButton: true
+    })
+  }
 }
 
 $('#registerForm').on('submit', async function(e) {

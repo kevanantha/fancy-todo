@@ -6,6 +6,8 @@ module.exports = {
       const todos = await Todo.find({
         userId: req.loggedUser.user,
       })
+        .lean()
+        .populate('userId', 'email name')
       res.status(200).json(todos)
     } catch (err) {
       next(err)
@@ -16,6 +18,8 @@ module.exports = {
       const todo = await Todo.findOne({
         _id: req.params.todoId,
       })
+        .lean()
+        .populate('userId', 'email name')
       res.status(200).json(todo)
     } catch (err) {
       next(err)

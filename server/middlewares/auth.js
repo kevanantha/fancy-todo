@@ -1,5 +1,6 @@
 const { verifyJwt } = require('../helpers/jwt')
 const Todo = require('../models/Todo')
+const Project = require('../models/Project')
 
 const authentication = (req, res, next) => {
   try {
@@ -11,10 +12,10 @@ const authentication = (req, res, next) => {
   }
 }
 
-const authorization = async (req, res, next) => {
+const authorizationTodo = async (req, res, next) => {
   try {
     const todo = await Todo.findOne({
-      userId: req.loggedUser.user,
+      _id: req.params.todoId,
     })
     if (todo.userId == req.loggedUser.user) {
       next()
@@ -28,7 +29,31 @@ const authorization = async (req, res, next) => {
   }
 }
 
+const authorizationProject = async (req, res, next) => {
+  try {
+    const project = await Project.findOne({
+      _id: req.param.projectId,
+    })
+
+    const isAllowed = project.members.find(member => {
+      if (member._id == req.loggedUser.user) return true
+      return false
+    })
+
+    if (isAllowed) {
+      next()
+    } else {
+      const err = new Error('Not Authorized! You have no access')
+      err.name = 'Unauthorized'
+      next(err)
+    }
+  } catch (err) {
+    next(err)
+  }
+}
+
 module.exports = {
   authentication,
-  authorization,
+  authorizationTodo,
+  authorizationProject,
 }

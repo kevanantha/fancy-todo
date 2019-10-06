@@ -1,5 +1,4 @@
 module.exports = (err, req, res, next) => {
-  console.log(err)
   let status
   let message
 
@@ -11,15 +10,19 @@ module.exports = (err, req, res, next) => {
     case 'ValidationError':
       status = 400
       const arr = []
-      for (let key in err.errors) {
-        arr.push(err.errors[key].message)
+
+      if (err.errors) {
+        for (let key in err.errors) {
+          arr.push(err.errors[key].message)
+        }
+      } else {
+        arr.push(err.message)
       }
       message = arr
       break
     case 'JsonWebTokenError':
       status = 401
       message = 'Not Authenticated! You must login'
-      // message = err.message
       break
     case 'Unauthorized':
       status = 403
